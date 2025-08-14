@@ -1,10 +1,14 @@
 package database
 
-import "github.com/zpnst/libsignal-protocol-go/protocol"
+import (
+	c2t "github.com/zpnst/c2t/internal/protocol"
+)
 
 type Database interface {
-	GetAllClients() []*protocol.SignalAddress
-	GetClient(name string) *protocol.SignalAddress
+	GetAllClients() ([]c2t.Client, error)
+	GetClient(name string) (c2t.Client, error)
 
-	AddClient(name string, deviceID uint32) error
+	AddClient(name string, client c2t.Client) error
+
+	UpdateClientBundle(name string, bundle c2t.RawBundle) error
 }

@@ -5,13 +5,13 @@ import (
 
 	"github.com/zpnst/c2t/cmd/c2t-instance/database"
 	"github.com/zpnst/c2t/cmd/c2t-instance/transport"
-	"github.com/zpnst/c2t/internal/protocol"
+	c2t "github.com/zpnst/c2t/internal/protocol"
 )
 
 func makeInstance(listenAddr string) *Instance {
 	topts := transport.TCPTransportOpts{
 		InstanceAddr: listenAddr,
-		Encoding:     protocol.NewGOBEncoding(),
+		Encoding:     c2t.NewGOBEncoding(),
 	}
 
 	iopts := InstanceOpts{
@@ -25,5 +25,7 @@ func makeInstance(listenAddr string) *Instance {
 
 func main() {
 	i := makeInstance(":4042")
-	log.Fatal(i.Run())
+	if err := i.Run(); err != nil {
+		log.Println(err)
+	}
 }

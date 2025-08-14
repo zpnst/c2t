@@ -4,12 +4,12 @@ import (
 	"log"
 
 	"github.com/zpnst/c2t/cmd/c2t-instance/database"
-	"github.com/zpnst/c2t/internal/protocol"
+	c2t "github.com/zpnst/c2t/internal/protocol"
 )
 
 type InstanceOpts struct {
 	Database  database.Database
-	Transport protocol.ITransport
+	Transport c2t.ITransport
 }
 
 type Instance struct {
@@ -40,7 +40,7 @@ func (i Instance) MainLoop() {
 	for {
 		select {
 		case m := <-i.Transport.Consume():
-			go i.HandleMessage(&m)
+			go i.HandleMessage(m)
 		}
 	}
 }

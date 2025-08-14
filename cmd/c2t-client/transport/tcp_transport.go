@@ -1,14 +1,13 @@
 package transport
 
 import (
-	"log"
 	"net"
 
-	"github.com/zpnst/c2t/internal/protocol"
+	c2t "github.com/zpnst/c2t/internal/protocol"
 )
 
 type TCPTransportOpts struct {
-	Encoding     protocol.Encoding
+	Encoding     c2t.Encoding
 	InstanceAddr string
 }
 
@@ -23,6 +22,14 @@ func NewTCPTransport(opts TCPTransportOpts) *TCPTransport {
 	}
 }
 
+func (t *TCPTransport) EncodeMessage(m *c2t.Message) error {
+	return t.Encoding.Encode(t.Conn, m)
+}
+
+func (t *TCPTransport) DecodeAnswer(m *c2t.Message) error {
+	return t.Encoding.Decode(t.Conn, m)
+}
+
 func (t *TCPTransport) DialInstance() error {
 	var err error
 	t.Conn, err = net.Dial("tcp", t.InstanceAddr)
@@ -30,20 +37,4 @@ func (t *TCPTransport) DialInstance() error {
 		return err
 	}
 	return nil
-}
-
-func (t *TCPTransport) WaitForInstance() error {
-	var m protocol.Message
-	if err := t.Encoding.Decode(t.Conn, &m); err != nil {
-		return err
-	}
-	log.Println(m)
-	return nil
-}
-
-func (t TCPTransport) Send(m protocol.Message) error {
-	if err := t.Encoding.Encode(t.Conn, &m); err != nil {
-		return err
-	}
-	return t.WaitForInstance()
 }

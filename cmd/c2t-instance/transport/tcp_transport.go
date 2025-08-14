@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"encoding/gob"
 	"errors"
 	"io"
 	"log"
@@ -45,12 +46,21 @@ func (t TCPTransport) Consume() <-chan protocol.Message {
 	return t.recvChan
 }
 
+func (t TCPTransport) SendAnswer(src string, b any) error {
+	p := t.Peer(src)
+	ans := protocol.Message{
+		From: t.Addr(),
+		Body: b,
+	}
+	return gob.NewEncoder(p).Encode(ans)
+}
+
 func (t *TCPTransport) ListenAndAccept() error {
 	var err error
 	if t.listener, err = net.Listen("tcp", t.InstanceAddr); err != nil {
 		return err
 	} else {
-		log.Printf("[%s] :: node is up\n", t.InstanceAddr)
+		log.Printf("[%s] :: instance is up\n", t.InstanceAddr)
 		go t.AcceptLoop()
 	}
 	return nil
@@ -69,13 +79,26 @@ func (t TCPTransport) AcceptLoop() {
 			t.Peers[conn.RemoteAddr().String()] = TCPPerr{
 				Conn: conn,
 			}
-			go func() {
-				var m protocol.Message = protocol.Message{
-					From: conn.RemoteAddr().String(),
-				}
-				t.Encoding.Decode(conn, &m)
-				t.recvChan <- m
-			}()
+			go t.HandleConn(conn)
 		}
+	}
+}
+
+func (t TCPTransport) HandleConn(conn net.Conn) {
+	var err error
+
+	defer func() {
+		log.Printf("[%s] :: dropping peer connection: %s\n", t.Addr(), err)
+		conn.Close()
+	}()
+
+	var m protocol.Message = protocol.Message{
+		From: conn.RemoteAddr().String(),
+	}
+	for {
+		if err = t.Encoding.Decode(conn, &m); err != nil {
+			return
+		}
+		t.recvChan <- m
 	}
 }
