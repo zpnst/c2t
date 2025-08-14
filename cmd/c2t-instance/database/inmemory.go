@@ -52,23 +52,43 @@ func (i *InMemoryDatabase) AddClient(name string, client c2t.Client) error {
 		client.Password = string(
 			bytehelper.ArrayToSlice(sha256.Sum256([]byte(client.Password))))
 		i.Clients[name] = client
-	} else {
-		return errors.New("client with that name already exists")
+		return nil
 	}
-	return nil
+	return errors.New("client with that name already exists")
 }
 
 func (i *InMemoryDatabase) UpdateClientBundle(name string, bundle c2t.RawBundle) error {
 	i.ClientsLock.Lock()
 	defer i.ClientsLock.Unlock()
 	if _, exists := i.Clients[name]; !exists {
-		return errors.New("client with that name already exists")
-	} else {
-		c := i.Clients[name]
-		c.Bundle = bundle
-		i.Clients[name] = c
+		return errors.New("no such client")
 	}
+	c := i.Clients[name]
+	c.Bundle = bundle
+	i.Clients[name] = c
 	return nil
+}
+
+func (i *InMemoryDatabase) AddClientMessage(name string, message c2t.EncryptedMessage) error {
+	i.ClientsLock.Lock()
+	defer i.ClientsLock.Unlock()
+	if _, exists := i.Clients[name]; !exists {
+		return errors.New("no such client")
+	}
+	c := i.Clients[name]
+	c.MessagesIn = append(c.MessagesIn, message)
+	i.Clients[name] = c
+	return nil
+}
+
+func (i *InMemoryDatabase) GetClientMessages(name string) ([]c2t.EncryptedMessage, error) {
+	i.ClientsLock.Lock()
+	defer i.ClientsLock.Unlock()
+	if _, exists := i.Clients[name]; !exists {
+		return []c2t.EncryptedMessage{}, errors.New("no such client")
+	}
+	messages := i.Clients[name].MessagesIn
+	return messages, nil
 }
 
 // Stores

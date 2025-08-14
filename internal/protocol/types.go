@@ -1,9 +1,23 @@
 package protocol
 
+import (
+	"github.com/zpnst/libsignal-protocol-go/ecc"
+	"github.com/zpnst/libsignal-protocol-go/keys/identity"
+	"github.com/zpnst/libsignal-protocol-go/keys/prekey"
+	"github.com/zpnst/libsignal-protocol-go/util/optional"
+)
+
+type EncryptedMessage struct {
+	FromName     string
+	FromDeviceID uint32
+	Message      []byte
+}
+
 type Client struct {
-	Name     string
-	Password string
-	Bundle   RawBundle
+	Name       string
+	Password   string
+	Bundle     RawBundle
+	MessagesIn []EncryptedMessage
 }
 
 type RawBundle struct {
@@ -32,4 +46,21 @@ func NewRawBundle(registrationID, deviceID uint32, preKeyID uint32, signedPreKey
 	}
 
 	return &bundle
+}
+
+func (rb *RawBundle) ToSignalBundle() *prekey.Bundle {
+	bundle := prekey.NewBundle(
+		rb.RegistrationID,
+		rb.DeviceID,
+		&optional.Uint32{
+			Value:   rb.PreKeyID,
+			IsEmpty: false,
+		},
+		rb.SignedPreKeyID,
+		ecc.NewDjbECPublicKey(rb.PreKeyPublic),
+		ecc.NewDjbECPublicKey(rb.SignedPreKeyPublic),
+		rb.SignedPreKeySignature,
+		identity.NewKey(ecc.NewDjbECPublicKey(rb.IdentityKeyPublic)),
+	)
+	return bundle
 }

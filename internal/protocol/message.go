@@ -22,7 +22,16 @@ type AnswerSignUp struct {
 	ErrorCode uint8
 }
 
-// Get Bundle Message
+// Update/Get Bundle Message
+type MessageUpdateBundle struct {
+	Name   string
+	Bundle RawBundle
+}
+
+type AnswerUpdateBundle struct {
+	ErrorCode uint8
+}
+
 type MessageGetBundle struct {
 	Name string
 }
@@ -32,14 +41,23 @@ type AnswerGetBundle struct {
 	Bundle    RawBundle
 }
 
-// Set Bundle Message
-type MessageSetBundle struct {
-	Name   string
-	Bundle RawBundle
+// Post/Get Encrypted Message
+type MessagePostEncrypted struct {
+	To      string
+	Message EncryptedMessage
 }
 
-type AnswerSetBundle struct {
+type AnswerPostEncrypted struct {
 	ErrorCode uint8
+}
+
+type MessageFetchEncrypted struct {
+	Me string
+}
+
+type AnswerFetchEncrypted struct {
+	ErrorCode uint8
+	Messages  []EncryptedMessage
 }
 
 // GOB Register
@@ -48,12 +66,18 @@ func init() {
 	gob.Register(MessageSignUp{})
 	gob.Register(AnswerSignUp{})
 
-	// Get/Set Bundle
+	// Update/Get Bundle
 	gob.Register(RawBundle{})
 	gob.Register(MessageGetBundle{})
 	gob.Register(AnswerGetBundle{})
-	gob.Register(MessageSetBundle{})
-	gob.Register(AnswerSetBundle{})
+	gob.Register(MessageUpdateBundle{})
+	gob.Register(AnswerUpdateBundle{})
+
+	// Post/Fetch Encrypted Message
+	gob.Register(MessagePostEncrypted{})
+	gob.Register(AnswerPostEncrypted{})
+	gob.Register(MessageFetchEncrypted{})
+	gob.Register(AnswerFetchEncrypted{})
 
 	// Signal
 	gob.Register(ecc.DjbECPublicKey{})

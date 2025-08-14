@@ -44,29 +44,6 @@ func (c Client) OnlyErrorSend(m c2t.Message) error {
 	return nil
 }
 
-func (c Client) SendGetBundle(name string) (c2t.RawBundle, error) {
-	var m c2t.Message = c2t.Message{
-		Body: c2t.MessageGetBundle{
-			Name: name,
-		},
-	}
-	a, err := c.Send(m)
-	if err != nil {
-		return c2t.RawBundle{}, err
-	}
-	return a.(c2t.AnswerGetBundle).Bundle, nil
-}
-
-func (c Client) SendSetBundle(name string, bundle c2t.RawBundle) error {
-	var m c2t.Message = c2t.Message{
-		Body: c2t.MessageSetBundle{
-			Name:   name,
-			Bundle: bundle,
-		},
-	}
-	return c.OnlyErrorSend(m)
-}
-
 func (c Client) SendSignUp(name, password string) error {
 	m := c2t.Message{
 		Body: c2t.MessageSignUp{
@@ -75,4 +52,54 @@ func (c Client) SendSignUp(name, password string) error {
 		},
 	}
 	return c.OnlyErrorSend(m)
+}
+
+func (c Client) SendSignIn(name, password string) error {
+	return nil
+}
+
+func (c Client) SendGetBundle(name string) (c2t.RawBundle, error) {
+	var m c2t.Message = c2t.Message{
+		Body: c2t.MessageGetBundle{
+			Name: name,
+		},
+	}
+	answ, err := c.Send(m)
+	if err != nil {
+		return c2t.RawBundle{}, err
+	}
+	return answ.(c2t.AnswerGetBundle).Bundle, nil
+}
+
+func (c Client) SendSetBundle(name string, bundle c2t.RawBundle) error {
+	var m c2t.Message = c2t.Message{
+		Body: c2t.MessageUpdateBundle{
+			Name:   name,
+			Bundle: bundle,
+		},
+	}
+	return c.OnlyErrorSend(m)
+}
+
+func (c Client) SendPostEncryptedMessage(to string, message c2t.EncryptedMessage) error {
+	var m c2t.Message = c2t.Message{
+		Body: c2t.MessagePostEncrypted{
+			To:      to,
+			Message: message,
+		},
+	}
+	return c.OnlyErrorSend(m)
+}
+
+func (c Client) SendFetchEncryptedMessage(me string) ([]c2t.EncryptedMessage, error) {
+	var m c2t.Message = c2t.Message{
+		Body: c2t.MessageFetchEncrypted{
+			Me: me,
+		},
+	}
+	answ, err := c.Send(m)
+	if err != nil {
+		return nil, err
+	}
+	return answ.(c2t.AnswerFetchEncrypted).Messages, nil
 }
